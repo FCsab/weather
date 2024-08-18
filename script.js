@@ -1,31 +1,76 @@
-function fetchData() {
-    fetch("https://api.open-meteo.com/v1/forecast?latitude=47.58&longitude=19.08&current=temperature_2m,precipitation,rain,snowfall&daily=uv_index_max,rain_sum,snowfall_sum&timezone=auto&forecast_days=1")
+function fetchData(latitude, longitude) {
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,snowfall&daily=uv_index_max,rain_sum,snowfall_sum&timezone=auto&forecast_days=1`)
         .then(response => response.json())
         .then(data => {
-            
             let gentime = data.generationtime_ms.toFixed(5);
             let probability = data.current.precipitation;
             let temperature = data.current.temperature_2m;
             let rain = data.current.rain;
             let snowfall = data.current.snowfall;
-            
-            const mainDiv = document.getElementById("mainDiv");
-            mainDiv.innerHTML = `
-                <p>Location: Budapest IV.</p>
-                <p>Temperature: ${temperature} °C</p>
-                <p>Precipitation Probability: ${probability} %</p>
-                <p>Rain: ${rain} mm</p>
-                ${snowfall > 0 ? `<p>Snowfall: ${snowfall} cm</p>` : ''}
-                <p>Generation Time: ${gentime} ms</p>
-            `;
+
+            // Fetch the location name using a reverse geocoding API
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                .then(response => response.json())
+                .then(locationData => {
+                    const locationName = locationData.address.city || locationData.address.town || locationData.address.village || "Unknown location";
+
+                    const mainDiv = document.getElementById("mainDiv");
+                    mainDiv.innerHTML = `
+                        <p>Location: ${locationName}</p>
+                        <p>Temperature: ${temperature} °C</p>
+                        <p>Precipitation Probability: ${probability} %</p>
+                        <p>Rain: ${rain} mm</p>
+                        ${snowfall > 0 ? `<p>Snowfall: ${snowfall} cm</p>` : ''}
+                        <p>Generation Time: ${gentime} ms</p>
+                    `;
+                })
+                .catch(error => {
+                    console.error("Error fetching location name: ", error);
+                    const mainDiv = document.getElementById("mainDiv");
+                    mainDiv.innerHTML = `
+                        <p>Location: Latitude ${latitude}, Longitude ${longitude}</p>
+                        <p>Temperature: ${temperature} °C</p>
+                        <p>Precipitation Probability: ${probability} %</p>
+                        <p>Rain: ${rain} mm</p>
+                        ${snowfall > 0 ? `<p>Snowfall: ${snowfall} cm</p>` : ''}
+                        <p>Generation Time: ${gentime} ms</p>
+                    `;
+                });
         })
         .catch(error => {
             console.error(error);
         });
 }
 
-fetchData();
-setInterval(fetchData, 900000);
+function getLocationAndFetchData() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                fetchData(latitude, longitude);
+                setInterval(() => fetchData(latitude, longitude), 900000);
+            },
+            error => {
+                console.error("Error getting location: ", error);
+
+                const defaultLatitude = 47.58;
+                const defaultLongitude = 19.08;
+                fetchData(defaultLatitude, defaultLongitude);
+                setInterval(() => fetchData(defaultLatitude, defaultLongitude), 900000);
+            }
+        );
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+
+        const defaultLatitude = 47.58;
+        const defaultLongitude = 19.08;
+        fetchData(defaultLatitude, defaultLongitude);
+        setInterval(() => fetchData(defaultLatitude, defaultLongitude), 900000);
+    }
+}
+
+getLocationAndFetchData();
 
 const header = document.getElementById("header");
 const footer = document.getElementById("footer");
@@ -69,7 +114,6 @@ footer.innerHTML = "Made by <a href='https://github.com/FCsab'>FCsab</a>";
 
 body.appendChild(footer);
 
-// Add media queries for responsiveness
 const style = document.createElement('style');
 style.innerHTML = `
     @media (max-width: 600px) {
