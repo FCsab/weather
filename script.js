@@ -24,7 +24,7 @@ function hideLoadingScreen() {
 }
 
 function fetchData(latitude, longitude) {
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,snowfall,weather_code&daily=uv_index_max,rain_sum,snowfall_sum&timezone=auto&forecast_days=1`)
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,snowfall,weather_code&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,precipitation_hours&timezone=auto&forecast_days=1`)
         .then(response => response.json())
         .then(data => {
             let gentime = data.generationtime_ms.toFixed(5);
@@ -35,6 +35,10 @@ function fetchData(latitude, longitude) {
             let uvIndex = data.daily.uv_index_max;
             let elevation = data.elevation;
             let weather_code = data.current.weather_code;
+            let max_temp = data.daily.temperature_2m_max;
+            let min_temp = data.daily.temperature_2m_min;
+            let precipitation_hours = data.daily.precipitation_hours;
+            let precipitation_sum = data.daily.precipitation_sum;
             hideLoadingScreen();
 
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
@@ -45,27 +49,30 @@ function fetchData(latitude, longitude) {
                     document.title = `Weather Forecast - ${locationName}`;
                     const mainDiv = document.getElementById("mainDiv");
                     mainDiv.innerHTML = `
-                        <p>Location: ${locationName}</p>
-                        <p>${weather_codes[weather_code]}</p>
-                        <p>Eleveation: ${elevation} m</p>
-                        <p>Temperature: ${temperature} °C</p>
+                        <p>Location: ${locationName} <br> ${weather_codes[weather_code]}</p>
+                        <p>Current temperature: ${temperature} °C</p>
+                        <p>Max Temperature: ${max_temp} °C <br> Min Temperature: ${min_temp} °C</p>
+                        <p>Precipitation hours: ${precipitation_hours} <br> Precipitation sum ${precipitation_sum} mm</p>
                         <p>Max UV Index: ${uvIndex}</p>
                         <p>Precipitation Probability: ${probability} %</p>
-                        <p>Rain: ${rain} mm</p>
                         ${snowfall > 0 ? `<p>Snowfall: ${snowfall} cm</p>` : ''}
-                        <p>Generation Time: ${gentime} ms</p>
+                        <p>Elevation: ${elevation} m</p>
+                        <p style="font-size: 12px;">Generation Time: ${gentime} ms</p>
                     `;
                 })
                 .catch(error => {
                     console.error("Error fetching location name: ", error);
                     const mainDiv = document.getElementById("mainDiv");
                     mainDiv.innerHTML = `
-                        <p>Location: Latitude ${latitude}, Longitude ${longitude}</p>
-                        <p>Temperature: ${temperature} °C</p>
+                        <p>Location: ${locationName} <br> ${weather_codes[weather_code]}</p>
+                        <p>Current temperature: ${temperature} °C</p>
+                        <p>Max Temperature: ${max_temp} °C <br> Min Temperature: ${min_temp} °C</p>
+                        <p>Precipitation hours: ${precipitation_hours} <br> Precipitation sum ${precipitation_sum} mm</p>
+                        <p>Max UV Index: ${uvIndex}</p>
                         <p>Precipitation Probability: ${probability} %</p>
-                        <p>Rain: ${rain} mm</p>
                         ${snowfall > 0 ? `<p>Snowfall: ${snowfall} cm</p>` : ''}
-                        <p>Generation Time: ${gentime} ms</p>
+                        <p>Elevation: ${elevation} m</p>
+                        <p style="font-size: 12px;">Generation Time: ${gentime} ms</p>
                     `;
                 });
         })
@@ -190,8 +197,8 @@ function getLocationAndFetchData() {
             error => {
                 console.error("Error getting location: ", error);
 
-                const defaultLatitude = 47.58;
-                const defaultLongitude = 19.08;
+                const defaultLatitude = 47.51;
+                const defaultLongitude = 19.07;
                 fetchData(defaultLatitude, defaultLongitude);
                 setInterval(() => fetchData(defaultLatitude, defaultLongitude), 900000);
             }
@@ -206,6 +213,7 @@ function getLocationAndFetchData() {
     }
 }
 
+document.title = "Weather Forecast";
 getLocationAndFetchData();
 
 const header = document.getElementById("header");
@@ -236,8 +244,8 @@ mainDiv.id = "mainDiv";
 mainDiv.style.color = "white";
 mainDiv.style.textAlign = "center";
 mainDiv.style.backgroundColor = "black";
-mainDiv.style.padding = "20px";
-mainDiv.style.fontSize = "30px";
+mainDiv.style.padding = "5px";
+mainDiv.style.fontSize = "25px";
 
 main.appendChild(mainDiv);
 
